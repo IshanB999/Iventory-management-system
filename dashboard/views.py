@@ -5,6 +5,9 @@ from .models import Products,Order
 from .forms import ProductForm, OrderForm
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.db.models import Sum ,Value
+from django.db.models.functions import Coalesce
+from django.db.models import F
 
 
 # Create your views here.
@@ -17,7 +20,21 @@ def index(request):
     products_count=products.count()
     workers_count=User.objects.all().count()
 
-    
+      # Aggregated orders per product
+    aggregated_orders = (
+        Order.objects.values('products__name')
+        .annotate(total_quantity=Sum('order_quantity'))
+        .order_by('products__name')
+    )
+
+    # Products with total ordered and remaining stock
+    products_with_remaining = (
+        Products.objects.annotate(
+            total_ordered=Coalesce(Sum('order__order_quantity'), Value(0))
+        ).annotate(
+            remaining=F('quantity') - F('total_ordered')
+        )
+    )
 
     if request.method=="POST":
         print(request.POST)
@@ -49,6 +66,8 @@ def index(request):
         'orders_count':orders_count,
         'products_count':products_count,
         'workers_count':workers_count,
+        'aggregated_orders': aggregated_orders,
+        'products_with_remaining': products_with_remaining,
     }
     return render(request,"dashboard/index.html",context)
 
@@ -138,13 +157,34 @@ def product_update(request,pk):
 
 @login_required
 def order_list(request):
-    orders= Order.objects.all()
-    orders_count=orders.count()
+    #for detailed table of order
+    orders=Order.objects.select_related('products','staff').all()
+
+    #for aggregated table in admin page(for charts/summery)
+    aggregated_orders = (
+        Order.objects.values('products__name')
+        .annotate(total_quantity=Sum('order_quantity'))
+        .order_by('products__name')
+    )
+
+    # Products with remaining stock (subtracting orders)
+    products_with_remaining = (
+        Products.objects.annotate(
+             total_ordered=Coalesce(Sum('order__order_quantity'), Value(0))
+        ).annotate(
+            remaining=F('quantity') - F('total_ordered')
+        )
+    )
+    orders_count=Order.objects.all().count()
     products_count=Products.objects.all().count()
     workers_count=User.objects.all().count()
+    
 
     context={
-        'orders':orders,
+        'orders': orders,
+        'aggregated_orders': aggregated_orders,
+        'products_with_remaining': products_with_remaining,
+        
         'workers_count':workers_count,
         'orders_count':orders_count,
         'products_count':products_count,

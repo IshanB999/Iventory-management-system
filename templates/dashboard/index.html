@@ -16,10 +16,10 @@ var ctx = document.getElementById('myChart1').getContext('2d');
 var myChart1 = new Chart(ctx, {
     type: 'pie',
     data: {
-        labels: [{% for order in orders %} "{{order.products.name}}", {% endfor %}],
+        labels: [{% for item in aggregated_orders %} "{{item.products__name}}", {% endfor %}],
         datasets: [{
             label: 'Order',
-            data: [{% for order in orders %} {{order.order_quantity}}, {% endfor %}],
+            data: [{% for item in aggregated_orders %} {{item.total_quantity}}, {% endfor %}],
             backgroundColor: [
                 'rgba(255, 99, 132, 1)',
                 'rgba(54, 162, 235,1)',
@@ -60,10 +60,10 @@ var ctx = document.getElementById('myChart').getContext('2d');
 var myChart = new Chart(ctx, {
     type: 'bar',
     data: {
-        labels: [{% for product in products %} '{{product.name}}', {% endfor %}],
+        labels: [{% for products in products %} '{{products.name}}', {% endfor %}],
         datasets: [{
             label: 'Products',
-            data: [{% for product in products %} {{product.quantity}}, {% endfor %}],
+            data: [{% for products in products %} {{products.quantity}}, {% endfor %}],
             backgroundColor: [
                 'rgba(255, 99, 132, 1)',
                 'rgba(54, 162, 235,1)',
@@ -95,9 +95,40 @@ var myChart = new Chart(ctx, {
 });
 </script>
         </div>
-        </div>/
+       
       </div>
     </div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+
+        </div>
+        <div class="col-md-8">
+            <table class="table bg-white">
+  <thead class="bg-info">
+    <tr class='bg-white'>
+      {% comment %} <th scope="col"></th> {% endcomment %}
+      <th scope="col">Products</th>
+      <th scope="col">Number of products</th>
+      <th scope="col">Number of order</th>
+      <th scope="col">Remaining number of products</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for product in products_with_remaining %}
+<tr>
+  <td>{{ product.name }}</td>
+  <td>{{ product.quantity }}</td>
+  <td>{{ product.total_ordered }}</td>
+  <td>{{ product.remaining }}</td>
+</tr>
+{% endfor %}
+  </tbody>
+</table>
+        </div>
+    </div>
+</div>
     
      <!-- End Graphs-->
     {% else %}
