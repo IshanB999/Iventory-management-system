@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+timezone.now
+
 
 # Create your models here.
 
@@ -14,6 +17,10 @@ class Products(models.Model):
     name=models.CharField(max_length=100,null=True)
     category=models.CharField(max_length=200,choices=CATEGORY,null=True)
     quantity=models.PositiveIntegerField(null=True)
+    created_by = models.ForeignKey(User, related_name='created_products', on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_by = models.ForeignKey(User, related_name='updated_products', on_delete=models.SET_NULL, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'{self.name}-{self.quantity}'

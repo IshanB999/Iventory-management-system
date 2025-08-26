@@ -30,6 +30,19 @@
                   </div>
                 </div>
                 <div class="col-md-8">
+                  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+
+<form method="get" action="{% url 'dashboard-product' %}" class="mb-3">
+    <input 
+        type="text" 
+        id="product-search" 
+        name="query" 
+        class="form-control" 
+        placeholder="Search products..." 
+        style="max-width:300px; display:inline-block;" 
+        value="{{ query|default:'' }}"
+    >
+</form>
                   <table class="table bg-white">
   <thead class="bg-info">
     <tr class='bg-white'>
@@ -40,6 +53,10 @@
       <th scope="col">Activity</th>
     </tr>
   </thead>
+  {% comment %} <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script> {% endcomment %}
+
   <tbody>
     {% for item in items %}
     <tr>
@@ -53,7 +70,23 @@
       </td>
     </tr>
     {% endfor %}
+   
+
   </tbody>
 </table>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+ <script>
+$(function() {
+    $("#product-search").autocomplete({
+        source: "{% url 'product-autocomplete' %}",  // Django endpoint returning JSON
+        minLength: 1,  // start showing suggestions after typing 1 character
+        select: function(event, ui) {
+            // Redirect to the audit page of the selected product
+            window.location.href = "/product/" + ui.item.value + "/audit/";
+        }
+    });
+});
+</script>
 
 {% endblock%}

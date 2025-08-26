@@ -1,0 +1,14 @@
+{% extends 'partials/base.html' %}
+{% block title %}Product Audit{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h3>Product Audit: {{ product.name }}</h3>
+    <hr>
+    <p><strong>Category:</strong> {{ product.category }}</p>
+    <p><strong>Quantity:</strong> {{ product.quantity }}</p>
+    <p><strong>Created by:</strong> {{ product.created_by.username if product.created_by else "N/A" }}</p>
+    <p><strong>Created at:</strong> {{ product.created_at }}</p>
+    <p><strong>Last updated by:</strong> {{ product.updated_by.username if product.updated_by else "N/A" }}</p>
+    <p><strong>Last updated at:</strong> {{ product.updated_at }}</p>
+</div>
+{% endblock %}

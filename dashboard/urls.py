@@ -12,4 +12,9 @@ urlpatterns=[
     path('product/update/<int:pk>/',views.product_update,name='dashboard-product-update'),
     path('order/',views.order_list,name='dashboard-order'),
     path('product/<int:pk>/orders/',views.product_orders,name='product-orders'),
+    path('product/<int:pk>/audit/', views.product_audit, name='product-audit'),
+    path('product-autocomplete/', views.product_autocomplete, name='product-autocomplete'),
+
+    
+
 ]

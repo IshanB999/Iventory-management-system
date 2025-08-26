@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.db.models import Sum ,Value
 from django.db.models.functions import Coalesce
 from django.db.models import F
+from django.db.models import Q
 
 
 # Create your views here.
@@ -97,23 +98,35 @@ def staff_detail(request,pk):
 
 @login_required
 def product(request):
-    items = Products.objects.all()
+    query=request.GET.get('query')
+    if query:
+        items = Products.objects.filter(
+            Q(name__icontains=query) | Q(category__icontains=query)
+        )
+    else:
+        items=Products.objects.all()
+
+    all_products=Products.objects.values_list('name',flat=True).distinct()
+    # items = Products.objects.all()
     products_count=items.count()
     # items =Products.objects.raw('SELECT * FROM dashboard_product')
 
     workers_count=User.objects.all().count()
     orders_count=Order.objects.all().count()
     
-    if request.method =="POST":
-        form=ProductForm(request.POST)
+    if request.method == "POST":
+        form = ProductForm(request.POST)
         if form.is_valid():
-            form.save()
-            product_name=form.cleaned_data.get('name')
-            messages.success(request,f'{product_name} has been added')
-
-            return redirect('dashboard-product')
+            product = form.save(commit=False)
+            product.updated_by = request.user
+        if not product.pk:
+            product.created_by = request.user
+        product.save()
+        messages.success(request, f'{product.name} has been saved')
+        return redirect('dashboard-product')
     else:
-        form=ProductForm()
+        form = ProductForm()
+
 
 
     context={
@@ -122,6 +135,8 @@ def product(request):
         'workers_count':workers_count,
         'orders_count':orders_count,
         'products_count':products_count, 
+        'query':query,
+        'all_products':all_products,
               }
     return render(request,"dashboard/product.html",context)
 
@@ -204,3 +219,26 @@ def product_orders(request,pk):
         'remaining':remaining,
     }
     return render(request,'dashboard/product_orders.html',context)
+
+
+
+
+from django.http import JsonResponse
+
+@login_required
+def product_autocomplete(request):
+    if 'term' in request.GET:
+        qs = Products.objects.filter(name__icontains=request.GET.get('term'))
+        # Send both label (name) and value (id)
+        data = [{'label': p.name, 'value': p.id} for p in qs]
+        return JsonResponse(data, safe=False)
+    return JsonResponse([], safe=False)
+
+
+@login_required
+def product_audit(request, pk):
+    product = Products.objects.get(id=pk)
+    context = {'product': product}
+    return render(request, 'dashboard/product_audit.html', context)
+
+
