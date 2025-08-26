@@ -1,0 +1,70 @@
+{% extends 'partials/base.html' %}
+{% block title %}Order list Page{% endblock %}
+
+ {% block content %}
+  {% include 'partials/topnav.html' %}
+         <!--Table-->
+
+   <!--Table-->
+
+    <div class="container">
+       
+      <div class="container">
+      <div class="row mt-4">
+        <div class="col-md-4">
+          <div class="card">
+            <div class="card-header bg-info text-white">Orders for {{product.name}}</div>
+            <div class="card-body">
+              
+                <h3 class="my-4"><p><strong>Total Ordered:</strong> {{ total_ordered }}</p>
+                                <p><strong>Remaining Stock:</strong> {{ remaining }}</p></h3>
+             
+            </div>
+          </div>
+        </div>
+      
+          <div class="row my-8">
+            
+                <div class="col-md-8">
+                  
+                </div>
+                <div class="col-md-11">
+                  <table class="table bg-white">
+  <thead class="bg-info">
+    <tr class='bg-white'>
+      
+      <th scope="col">Products</th>
+      <th scope="col">Category</th>
+      <th scope="col">Quantity</th>
+      <th scope="col">Ordered By</th>
+      <th scope="col">Dates</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for orders in orders %}
+    <tr>
+      
+      <td>{{orders.products.name }}</td>
+      <td>{{orders.products.category}}</td>
+      <td>{{orders.order_quantity}}</td>
+      <td>
+        {{orders.staff.username}}
+      </td>
+      <td>
+        {{orders.date}}
+      </td>
+    </tr>
+    {% empty %}
+      <tr>
+        <td colspan="3">No orders yet for this product.</td>
+      </tr>
+    {% endfor %}
+   
+  </tbody>
+  <a href="{% url 'dashboard-index' %}" class="btn btn-secondary">Back</a>
+</div>
+</table>
+</div>
+</div>
+</div>
+{% endblock%}

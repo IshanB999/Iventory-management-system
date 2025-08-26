@@ -190,3 +190,17 @@ def order_list(request):
         'products_count':products_count,
     }
     return render(request,"dashboard/order.html",context)
+
+
+def product_orders(request,pk):
+    product=Products.objects.get(id=pk)
+    orders=Order.objects.filter(products=product).select_related('staff')
+    total_ordered=orders.aggregate(total=Coalesce(Sum('order_quantity'),Value(0)))['total']
+    remaining=product.quantity-total_ordered
+    context={
+        'product':product,
+        'orders':orders,
+        'total_ordered':total_ordered,
+        'remaining':remaining,
+    }
+    return render(request,'dashboard/product_orders.html',context)

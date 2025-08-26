@@ -118,7 +118,7 @@ var myChart = new Chart(ctx, {
   <tbody>
     {% for product in products_with_remaining %}
 <tr>
-  <td>{{ product.name }}</td>
+  <td><a href="{% url 'product-orders' product.id %}">{{product.name}}</a></td>
   <td>{{ product.quantity }}</td>
   <td>{{ product.total_ordered }}</td>
   <td>{{ product.remaining }}</td>
