@@ -155,5 +155,11 @@ EMAIL_HOST_USER ='ishrak1223@gmail.com'
 EMAIL_HOST_PASSWORD ='saayan@1223'
 
 
+from decouple import config
+
+STRIPE_SECRET_KEY = config('STRIPE_SECRET_KEY')
+STRIPE_PUBLISHABLE_KEY = config('STRIPE_PUBLISHABLE_KEY')
+
+
 
 

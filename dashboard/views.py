@@ -9,19 +9,25 @@ from django.db.models import Sum ,Value
 from django.db.models.functions import Coalesce
 from django.db.models import F
 from django.db.models import Q
+import stripe
+from django.conf import settings
+from django.views import View
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 
 
 # Create your views here.
 
+
 @login_required
 def index(request):
-    orders=Order.objects.all()
-    products=Products.objects.all()
-    orders_count=orders.count()
-    products_count=products.count()
-    workers_count=User.objects.all().count()
+    orders = Order.objects.all()
+    products = Products.objects.all()
+    orders_count = orders.count()
+    products_count = products.count()
+    workers_count = User.objects.all().count()
 
-      # Aggregated orders per product
+    # Aggregated orders per product
     aggregated_orders = (
         Order.objects.values('products__name')
         .annotate(total_quantity=Sum('order_quantity'))
@@ -37,40 +43,64 @@ def index(request):
         )
     )
 
-    if request.method=="POST":
-        print(request.POST)
-        form=OrderForm(request.POST)
-        if form.is_valid():
-            instance = form.save(commit=False)
-            instance.staff=request.user
-            
-            order=form.save(commit=False)
-            product=order.products
-            if product.quantity >=order.order_quantity:
-                product.quantity -= order.order_quantity
-                product.save()
-                order.save()
-                instance.save()
-                messages.success(request,"Order placed successfully!")
-            else:
-                messages.error(request,"Not enough stock available.")
+    # Always initialize the form
+    form = OrderForm()
 
-            
-            
-        return redirect('dashboard-index')
-    else:
-        form=OrderForm()
-    context={
-        'orders':orders,
-        'form':form,
-        'products':products,
-        'orders_count':orders_count,
-        'products_count':products_count,
-        'workers_count':workers_count,
+    if request.method == "POST":
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            order = form.save(commit=False)
+            order.staff = request.user
+            product = order.products
+
+            # Stock check
+            if product.quantity >= order.order_quantity:
+                # --- Stripe Integration ---
+                import stripe
+                stripe.api_key = settings.STRIPE_SECRET_KEY
+                YOUR_DOMAIN = "http://127.0.0.1:8000"
+
+                line_items=[{
+                        'price_data': {
+                            'currency': 'usd',
+                            'product_data': {'name': product.name},
+                            'unit_amount': int(product.price * 100) * order.order_quantity,
+                        },
+                        'quantity': 1,
+                    }],
+                print(line_items)
+                checkout_session = stripe.checkout.Session.create(
+                    payment_method_types=['card'],
+                    line_items=[{
+                        'price_data': {
+                            'currency': 'usd',
+                            'product_data': {'name': product.name},
+                            'unit_amount': int(product.price * 100) * order.order_quantity,
+                        },
+                        'quantity': 1,
+                    }],
+                    mode='payment',
+                    success_url=YOUR_DOMAIN + f'/dashboard/order-success/{product.id}/{order.order_quantity}/',
+                    cancel_url=YOUR_DOMAIN + '/dashboard/',
+                )
+                return redirect(checkout_session.url)
+            else:
+                messages.error(request, "Not enough stock available.")
+                return redirect('dashboard-index')
+
+    # Render page for GET requests or if form is invalid POST
+    context = {
+        'orders': orders,
+        'form': form,
+        'products': products,
+        'orders_count': orders_count,
+        'products_count': products_count,
+        'workers_count': workers_count,
         'aggregated_orders': aggregated_orders,
         'products_with_remaining': products_with_remaining,
     }
-    return render(request,"dashboard/index.html",context)
+    return render(request, "dashboard/index.html", context)
+
 
 @login_required
 def staff(request):
@@ -241,4 +271,50 @@ def product_audit(request, pk):
     context = {'product': product}
     return render(request, 'dashboard/product_audit.html', context)
 
+
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+
+@login_required
+def create_checkout_session(request, pk):
+    product = get_object_or_404(Products, id=pk)
+    YOUR_DOMAIN = "http://127.0.0.1:8000"
+
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {'name': product.name},
+                    'unit_amount': int(product.price * 100),
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            success_url=YOUR_DOMAIN + '/success/',
+            cancel_url=YOUR_DOMAIN + '/cancel/',
+        )
+        return JsonResponse({'id': checkout_session.id})
+    except Exception as e:
+        return JsonResponse({'error': str(e)})
+    
+@login_required
+def order_success(request, product_id, quantity):
+    product = Products.objects.get(id=product_id)
+    
+    if product.quantity >= int(quantity):
+        product.quantity -= int(quantity)
+        product.save()
+
+        Order.objects.create(
+            staff=request.user,
+            products=product,
+            order_quantity=int(quantity)
+        )
+        messages.success(request, "Payment successful and order placed!")
+    else:
+        messages.error(request, "Stock not available after payment.")
+
+    return redirect('dashboard-index')
 

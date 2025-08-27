@@ -21,6 +21,7 @@ class Products(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_by = models.ForeignKey(User, related_name='updated_products', on_delete=models.SET_NULL, null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
 
     def __str__(self):
         return f'{self.name}-{self.quantity}'

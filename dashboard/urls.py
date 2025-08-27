@@ -14,6 +14,8 @@ urlpatterns=[
     path('product/<int:pk>/orders/',views.product_orders,name='product-orders'),
     path('product/<int:pk>/audit/', views.product_audit, name='product-audit'),
     path('product-autocomplete/', views.product_autocomplete, name='product-autocomplete'),
+    path('checkout/<int:pk>/', views.create_checkout_session, name='checkout'),
+    path('dashboard/order-success/<int:product_id>/<int:quantity>/', views.order_success, name='order-success'),
 
     
 
