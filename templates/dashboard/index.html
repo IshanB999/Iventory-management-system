@@ -126,6 +126,40 @@ var myChart = new Chart(ctx, {
 {% endfor %}
   </tbody>
 </table>
+
+<div class="container my-5">
+    <h4>Monthly Payments</h4>
+    <canvas id="paymentChart" ></canvas>
+</div>
+
+{{ payment_labels|json_script:"paymentLabels" }}
+{{ payment_data|json_script:"paymentData" }}
+
+<script>
+const paymentLabels = JSON.parse(document.getElementById('paymentLabels').textContent);
+const paymentData = JSON.parse(document.getElementById('paymentData').textContent);
+
+const ctxPayment = document.getElementById('paymentChart').getContext('2d');
+const paymentChart = new Chart(ctxPayment, {
+    type: 'bar',
+    data: {
+        labels: paymentLabels,
+        datasets: [{
+            label: 'Payments Received ($)',
+            data: paymentData,
+            backgroundColor: 'rgba(75, 192, 192, 0.6)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+</script>
         </div>
     </div>
 </div>

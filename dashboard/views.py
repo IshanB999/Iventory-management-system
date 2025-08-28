@@ -14,6 +14,10 @@ from django.conf import settings
 from django.views import View
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
+from django.db.models.functions import TruncDay
+from datetime import date
+from django.db.models.functions import ExtractMonth
+import datetime
 
 
 # Create your views here.
@@ -32,6 +36,7 @@ def index(request):
         Order.objects.values('products__name')
         .annotate(total_quantity=Sum('order_quantity'))
         .order_by('products__name')
+        
     )
 
     # Products with total ordered and remaining stock
@@ -42,6 +47,18 @@ def index(request):
             remaining=F('quantity') - F('total_ordered')
         )
     )
+
+    today=datetime.date.today()
+    payments_by_day = (
+        Order.objects.filter(payment_date__year=today.year, payment_date__month=today.month)
+        .annotate(day=TruncDay('payment_date'))
+        .values('day')
+        .annotate(total_payment=Sum('payment_amount'))
+        .order_by('day')
+    )
+
+    payment_labels = [p['day'].strftime('%d %b') for p in payments_by_day]
+    payment_data = [float(p['total_payment']) for p in payments_by_day]
 
     # Always initialize the form
     form = OrderForm()
@@ -98,6 +115,8 @@ def index(request):
         'workers_count': workers_count,
         'aggregated_orders': aggregated_orders,
         'products_with_remaining': products_with_remaining,
+        'payment_labels': payment_labels,  # <-- for chart
+        'payment_data': payment_data, 
     }
     return render(request, "dashboard/index.html", context)
 
@@ -298,23 +317,37 @@ def create_checkout_session(request, pk):
         return JsonResponse({'id': checkout_session.id})
     except Exception as e:
         return JsonResponse({'error': str(e)})
-    
-@login_required
+
+
+
+
+
+from django.utils import timezone
+
 def order_success(request, product_id, quantity):
     product = Products.objects.get(id=product_id)
-    
-    if product.quantity >= int(quantity):
-        product.quantity -= int(quantity)
+    quantity = int(quantity)
+
+    if product.quantity >= quantity:
+        product.quantity -= quantity
         product.save()
 
+        # Calculate payment amount based on product price
+        payment_amount = product.price * quantity  # Make sure 'price' exists in Products model
+
+        # Create order and save payment info
         Order.objects.create(
             staff=request.user,
             products=product,
-            order_quantity=int(quantity)
+            order_quantity=quantity,
+            payment_amount=payment_amount,
+            payment_date=timezone.now()
         )
+
         messages.success(request, "Payment successful and order placed!")
     else:
         messages.error(request, "Stock not available after payment.")
 
     return redirect('dashboard-index')
+
 

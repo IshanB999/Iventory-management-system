@@ -37,6 +37,9 @@ class Order(models.Model):
     staff=models.ForeignKey(User,models.CASCADE,null=True)
     order_quantity=models.PositiveIntegerField(null=True)
     date=models.DateTimeField(auto_now_add=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)  # optional if you want order price
+    payment_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)  # <- total payment
+    payment_date = models.DateField(auto_now_add=True)
 
     # class Meta:
     #     verbose_name_plural="order"
