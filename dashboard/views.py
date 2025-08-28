@@ -165,7 +165,7 @@ def product(request):
     orders_count=Order.objects.all().count()
     
     if request.method == "POST":
-        form = ProductForm(request.POST)
+        form = ProductForm(request.POST,request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
             product.updated_by = request.user

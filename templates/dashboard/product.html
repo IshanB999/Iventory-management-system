@@ -22,12 +22,12 @@
                     <h4>Add Products</h4><a href="{% url 'upload_products' %}" class="btn btn-success">Upload Excel</a>
 
                     <hr>
-                    <form method="POST">
-                      {% csrf_token %}
-                      {{form | crispy}}
-                     
-                      <input class="btn btn-success btn-block" type="submit" value="Add Products">
+                    <form method="POST" enctype="multipart/form-data">  <!-- add enctype -->
+                          {% csrf_token %}
+                          {{ form | crispy }}
+                          <input class="btn btn-success btn-block" type="submit" value="Add Products">
                     </form>
+
                   </div>
                 </div>
                 <div class="col-md-8">
@@ -48,6 +48,7 @@
   <thead class="bg-info">
     <tr class='bg-white'>
       <th scope="col"></th>
+      <th scope="col">Image</th>
       <th scope="col">Name</th>
       <th scope="col">Category</th>
       <th scope="col">Quantity</th>
@@ -63,6 +64,13 @@
     {% for item in items %}
     <tr>
       <th scope="row"></th>
+      <td>
+        {% if item.image %}
+        <img src="{{ item.image.url }}"  alt="{{ item.name }}"width="50" height="50" style="object-fit:cover;">
+        {% else %}
+        <span>No image</span>
+        {% endif %}
+      </td>
       <td>{{ item.name }}</td>
       <td>{{ item.category }}</td>
       <td>{{ item.quantity }}</td>
