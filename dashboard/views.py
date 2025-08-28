@@ -18,7 +18,8 @@ from django.db.models.functions import TruncDay
 from datetime import date
 from django.db.models.functions import ExtractMonth
 import datetime
-
+import openpyxl
+from .forms import UploadExcelForm
 
 # Create your views here.
 
@@ -350,4 +351,66 @@ def order_success(request, product_id, quantity):
 
     return redirect('dashboard-index')
 
+
+
+
+
+
+
+def upload_products(request):
+    if request.method == "POST":
+        form = UploadExcelForm(request.POST, request.FILES)
+        if form.is_valid():
+            file = request.FILES['file']
+            wb = openpyxl.load_workbook(file)
+            sheet = wb.active
+
+            errors = []
+
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                if not row or len(row) < 4:
+                    continue  # skip empty or incomplete rows
+
+                product_name, category, quantity, price = row[:4]
+
+                # Skip rows where required fields are missing
+                if not product_name or not category or quantity is None or price is None:
+                    errors.append(f"Skipped row due to missing data: {row}")
+                    continue
+
+                # Ensure quantity and price are numbers
+                try:
+                    quantity = int(quantity)
+                    price = float(price)
+                except ValueError:
+                    errors.append(f"Skipped row due to invalid number: {row}")
+                    continue
+
+                product, created = Products.objects.get_or_create(
+                    name=product_name,
+                    defaults={
+                        "category": category,
+                        "quantity": 0,
+                        "price": price,
+                    }
+                )
+                if not created:
+                    product.quantity +=quantity
+                    product.price =price
+                product.save()
+
+                if created:
+                    print(f"New product added: {product_name}")
+                else:
+                    print(f"Updated product: {product_name}")
+
+            if errors:
+                messages.warning(request, "Some rows were skipped:\n" + "\n".join(errors))
+
+            messages.success(request, "Products imported/updated successfully!")
+            return redirect('dashboard-product')  # Change to your product list view name
+    else:
+        form = UploadExcelForm()
+
+    return render(request, "dashboard/upload_products.html", {"form": form})
 

@@ -19,7 +19,8 @@
                   {% endif %}
                   {% endfor %}
                   <div class="border bg-white p-3">
-                    <h4>Add Products</h4>
+                    <h4>Add Products</h4><a href="{% url 'upload_products' %}" class="btn btn-success">Upload Excel</a>
+
                     <hr>
                     <form method="POST">
                       {% csrf_token %}
@@ -50,6 +51,7 @@
       <th scope="col">Name</th>
       <th scope="col">Category</th>
       <th scope="col">Quantity</th>
+      <th scope="col">Price</th>
       <th scope="col">Activity</th>
     </tr>
   </thead>
@@ -64,6 +66,7 @@
       <td>{{ item.name }}</td>
       <td>{{ item.category }}</td>
       <td>{{ item.quantity }}</td>
+      <td>{{ item.price }}</td>
       <td>
         <a class="btn btn-info btn-sm" href="{% url 'dashboard-product-update' item.id %}">Edit</a>
         <a class="btn btn-danger btn-sm" href="{% url 'dashboard-product-delete' item.id %}">Delete</a>
