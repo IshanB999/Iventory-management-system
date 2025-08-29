@@ -71,7 +71,10 @@
         <span>No image</span>
         {% endif %}
       </td>
-      <td>{{ item.name }}</td>
+      <td> <a href="{% url 'product-orders' item.id %}">
+        {{ item.name }}
+      </a>
+      </td>
       <td>{{ item.category }}</td>
       <td>{{ item.quantity }}</td>
       <td>{{ item.price }}</td>

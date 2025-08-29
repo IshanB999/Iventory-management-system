@@ -1,70 +1,59 @@
 {% extends 'partials/base.html' %}
-{% block title %}Order list Page{% endblock %}
+{% block title %}Orders for {{ product.name }}{% endblock %}
 
- {% block content %}
-  {% include 'partials/topnav.html' %}
-         <!--Table-->
+{% block content %}
+{% include 'partials/topnav.html' %}
 
-   <!--Table-->
-
-    <div class="container">
-       
-      <div class="container">
-      <div class="row mt-4">
-        <div class="col-md-4">
-          <div class="card">
-            <div class="card-header bg-info text-white">Orders for {{product.name}}</div>
-            <div class="card-body">
-              
-                <h3 class="my-4"><p><strong>Total Ordered:</strong> {{ total_ordered }}</p>
-                                <p><strong>Remaining Stock:</strong> {{ remaining }}</p></h3>
-             
-            </div>
-          </div>
+<div class="container mt-4">
+  <div class="row">
+    <!-- Product Summary -->
+    <div class="col-md-4">
+      <div class="card">
+        <div class="card-header bg-info text-white">
+          {% if product.image %}
+      <img src="{{ product.image.url }}" alt="{{ product.name }}" width="50" height="50" style="object-fit:cover; margin-right:10px;">
+    {% else %}
+      <span>No image</span>
+    {% endif %}
+          Product: {{ product.name }}
         </div>
-      
-          <div class="row my-8">
-            
-                <div class="col-md-8">
-                  
-                </div>
-                <div class="col-md-11">
-                  <table class="table bg-white">
-  <thead class="bg-info">
-    <tr class='bg-white'>
-      
-      <th scope="col">Products</th>
-      <th scope="col">Category</th>
-      <th scope="col">Quantity</th>
-      <th scope="col">Ordered By</th>
-      <th scope="col">Dates</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for orders in orders %}
-    <tr>
-      
-      <td>{{orders.products.name }}</td>
-      <td>{{orders.products.category}}</td>
-      <td>{{orders.order_quantity}}</td>
-      <td>
-        {{orders.staff.username}}
-      </td>
-      <td>
-        {{orders.date}}
-      </td>
-    </tr>
-    {% empty %}
-      <tr>
-        <td colspan="3">No orders yet for this product.</td>
-      </tr>
-    {% endfor %}
-   
-  </tbody>
-  <a href="{% url 'dashboard-index' %}" class="btn btn-secondary">Back</a>
+        <div class="card-body">
+          <p><strong>Category:</strong> {{ product.category }}</p>
+          <p><strong>Price:</strong> ${{ product.price }}</p>
+          <p><strong>Total Ordered:</strong> {{ total_ordered }}</p>
+          <p><strong>Remaining Stock:</strong> {{ remaining }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders Table -->
+    <div class="col-md-8">
+      <h4>Orders for {{ product.name }}</h4>
+      <table class="table table-bordered bg-white">
+        <thead class="bg-info text-white">
+          <tr>
+            <th>Ordered By</th>
+            <th>Quantity</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for order in orders %}
+          <tr>
+            <td>{{ order.staff.username }}</td>
+            <td>{{ order.order_quantity }}</td>
+            <td>{{ order.date }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3">No orders yet for this product.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <a href="{% url 'dashboard-index' %}" class="btn btn-secondary mt-3">Back</a>
+    </div>
+  </div>
 </div>
-</table>
-</div>
-</div>
-</div>
-{% endblock%}
+{% endblock %}
